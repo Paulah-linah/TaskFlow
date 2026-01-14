@@ -1,0 +1,5 @@
+{
+  "name": "TaskFlow – Modern Task Manager",
+  "description": "A clean, minimal, and high-performance task management application built with React, Tailwind CSS, and Framer Motion. Features local persistence, real-time statistics, and a modern card-based UI.",
+  "requestFramePermissions": []
+}
