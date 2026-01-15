@@ -27,16 +27,22 @@ class StatsDashboard extends StatelessWidget {
       Colors.grey,
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildStatCards(context, themeProvider),
-          const SizedBox(height: 24),
-          _buildChartsSection(context, data, colors, themeProvider),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 600;
+
+        return Padding(
+          padding: EdgeInsets.all(compact ? 16 : 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatCards(context, themeProvider),
+              SizedBox(height: compact ? 16 : 24),
+              _buildChartsSection(context, data, colors, themeProvider),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -65,74 +71,86 @@ class StatsDashboard extends StatelessWidget {
       },
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: statCards.length,
-      itemBuilder: (context, index) {
-        final card = statCards[index];
-        return Card(
-          color: Theme.of(context).colorScheme.surface,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32),
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width < 600 ? 1 : (width < 900 ? 2 : 3);
+        final childAspectRatio = width < 600 ? 3.2 : (width < 900 ? 1.8 : 1.5);
+        final padding = width < 600 ? 18.0 : 24.0;
+        final valueSize = width < 600 ? 28.0 : 32.0;
+
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            childAspectRatio: childAspectRatio,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        card['label'] as String,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '${card['value']}',
-                        style: GoogleFonts.inter(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
+          itemCount: statCards.length,
+          itemBuilder: (context, index) {
+            final card = statCards[index];
+            return Card(
+              color: Theme.of(context).colorScheme.surface,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(32),
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
                 ),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: card['bgColor'] as Color,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(
-                    card['icon'] as IconData,
-                    size: 28,
-                    color: card['color'] as Color,
-                  ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            card['label'] as String,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${card['value']}',
+                            style: GoogleFonts.inter(
+                              fontSize: valueSize,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: card['bgColor'] as Color,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(
+                        card['icon'] as IconData,
+                        size: 28,
+                        color: card['color'] as Color,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ).animate()
-          .fadeIn(delay: Duration(milliseconds: index * 100))
-          .scale(delay: Duration(milliseconds: index * 100));
+              ),
+            ).animate()
+              .fadeIn(delay: Duration(milliseconds: index * 100))
+              .scale(delay: Duration(milliseconds: index * 100));
+          },
+        );
       },
     );
   }
@@ -143,193 +161,215 @@ class StatsDashboard extends StatelessWidget {
     List<Color> colors,
     ThemeProvider themeProvider,
   ) {
-    return Row(
-      children: [
-        Expanded(
-          child: Card(
-            color: Theme.of(context).colorScheme.surface,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(40),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
-              ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Task Distribution',
-                    style: GoogleFonts.inter(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 250,
-                    child: data.isNotEmpty
-                        ? PieChart(
-                            PieChartData(
-                              sectionsSpace: 2,
-                              centerSpaceRadius: 60,
-                              sections: data.asMap().entries.map((entry) {
-                                final index = entry.key;
-                                final category = entry.value;
-                                final color = colors[index % colors.length];
-                                
-                                return PieChartSectionData(
-                                  color: color,
-                                  value: category.value.toDouble(),
-                                  title: '${category.value}',
-                                  radius: 80,
-                                  titleStyle: GoogleFonts.inter(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                  badgeWidget: _Badge(
-                                    category.name,
-                                    color,
-                                  ),
-                                  badgePositionPercentageOffset: .98,
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        : Center(
-                            child: Text(
-                              'No active tasks to analyze',
-                              style: GoogleFonts.inter(
-                                fontSize: 16,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                  ),
-                  if (data.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    _buildLegend(data, colors, context),
-                  ],
-                ],
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final compact = width < 900;
+        final chartPadding = EdgeInsets.all(width < 600 ? 20 : 32);
+        final promoPadding = EdgeInsets.all(width < 600 ? 20 : 32);
+        final titleSize = width < 600 ? 22.0 : 28.0;
+        final bodySize = width < 600 ? 14.0 : 16.0;
+        final pieHeight = width < 600 ? 220.0 : 250.0;
+        final centerSpace = width < 600 ? 50.0 : 60.0;
+        final sectionRadius = width < 600 ? 70.0 : 80.0;
+        final pieRadius = width < 600 ? 72.0 : 80.0;
+
+        final distribution = Card(
+          color: Theme.of(context).colorScheme.surface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(40),
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
             ),
           ),
-        ),
-        const SizedBox(width: 24),
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: themeProvider.accentColorLight,
-              borderRadius: BorderRadius.circular(40),
-              boxShadow: [
-                BoxShadow(
-                  color: themeProvider.accentColorLight.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Stack(
+          child: Padding(
+            padding: chartPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Positioned(
-                  right: -20,
-                  top: -20,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
+                Text(
+                  'Task Distribution',
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
-                ).animate()
-                  .scale(duration: 700.ms, delay: 500.ms),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Boost your productivity!',
-                          style: GoogleFonts.inter(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        RichText(
-                          text: TextSpan(
-                            style: GoogleFonts.inter(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.white.withOpacity(0.8),
-                              height: 1.5,
-                            ),
-                            children: [
-                              const TextSpan(text: "You've completed "),
-                              TextSpan(
-                                text: '${stats.completed}',
-                                style: GoogleFonts.inter(
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  height: pieHeight,
+                  child: data.isNotEmpty
+                      ? PieChart(
+                          PieChartData(
+                            sectionsSpace: 2,
+                            centerSpaceRadius: centerSpace,
+                            sections: data.asMap().entries.map((entry) {
+                              final index = entry.key;
+                              final category = entry.value;
+                              final color = colors[index % colors.length];
+
+                              return PieChartSectionData(
+                                color: color,
+                                value: category.value.toDouble(),
+                                title: '${category.value}',
+                                radius: pieRadius,
+                                titleStyle: GoogleFonts.inter(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
-                                  decoration: TextDecoration.underline,
-                                  decorationColor: Colors.white,
-                                  decorationThickness: 2,
                                 ),
-                              ),
-                              const TextSpan(text: ' tasks recently.\nKeep up the momentum to hit your weekly targets!'),
-                            ],
+                                badgeWidget: _Badge(
+                                  category.name,
+                                  color,
+                                ),
+                                badgePositionPercentageOffset: .98,
+                              );
+                            }).toList(),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Navigate to reports or show analytics
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: themeProvider.accentColorLight,
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 8,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'View Reports',
+                        )
+                      : Center(
+                          child: Text(
+                            'No active tasks to analyze',
                             style: GoogleFonts.inter(
-                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontStyle: FontStyle.italic,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          const Icon(Icons.arrow_forward),
-                        ],
-                      ),
-                    ),
-                  ],
+                        ),
                 ),
+                if (data.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  _buildLegend(data, colors, context),
+                ],
               ],
             ),
-          ).animate()
-            .fadeIn(delay: 300.ms)
-            .slideX(begin: 0.2, end: 0, duration: 500.ms),
-        ),
-      ],
+          ),
+        );
+
+        final promo = Container(
+          padding: promoPadding,
+          decoration: BoxDecoration(
+            color: themeProvider.accentColorLight,
+            borderRadius: BorderRadius.circular(40),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.accentColorLight.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -20,
+                top: -20,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ).animate().scale(duration: 700.ms, delay: 500.ms),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Boost your productivity!',
+                        style: GoogleFonts.inter(
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      RichText(
+                        text: TextSpan(
+                          style: GoogleFonts.inter(
+                            fontSize: bodySize,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.8),
+                            height: 1.5,
+                          ),
+                          children: [
+                            const TextSpan(text: "You've completed "),
+                            TextSpan(
+                              text: '${stats.completed}',
+                              style: GoogleFonts.inter(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                decoration: TextDecoration.underline,
+                                decorationColor: Colors.white,
+                                decorationThickness: 2,
+                              ),
+                            ),
+                            const TextSpan(text: ' tasks recently.\nKeep up the momentum to hit your weekly targets!'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: compact ? 20 : 32),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate to reports or show analytics
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: themeProvider.accentColorLight,
+                      padding: EdgeInsets.symmetric(horizontal: compact ? 22 : 32, vertical: compact ? 14 : 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'View Reports',
+                          style: GoogleFonts.inter(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Icon(Icons.arrow_forward),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ).animate().fadeIn(delay: 300.ms).slideX(begin: 0.2, end: 0, duration: 500.ms);
+
+        if (compact) {
+          return Column(
+            children: [
+              distribution,
+              const SizedBox(height: 24),
+              promo,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: distribution),
+            const SizedBox(width: 24),
+            Expanded(child: promo),
+          ],
+        );
+      },
     );
   }
 

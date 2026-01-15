@@ -584,6 +584,34 @@ class _HomeScreenState extends State<HomeScreen> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final stackSearchStatus = constraints.maxWidth < 720;
+          final compact = constraints.maxWidth < 420;
+
+          Widget labeledChips({required String label, required List<Widget> chips}) {
+            final chipWrap = Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: chips,
+            );
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  sectionLabel(label),
+                  const SizedBox(height: 10),
+                  chipWrap,
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(width: 86, child: sectionLabel(label)),
+                Expanded(child: chipWrap),
+              ],
+            );
+          }
 
           final search = Container(
             height: 36,
@@ -639,6 +667,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           );
 
+          final sortDropdown = Container(
+            height: 30,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: DropdownButton<String>(
+              value: _sortBy,
+              underline: const SizedBox(),
+              isDense: true,
+              icon: Icon(Icons.keyboard_arrow_down, size: 18, color: muted),
+              items: const [
+                DropdownMenuItem(value: 'date-asc', child: Text('Due Date (Soonest)')),
+                DropdownMenuItem(value: 'date-desc', child: Text('Due Date (Latest)')),
+                DropdownMenuItem(value: 'priority-high', child: Text('Priority (Highest)')),
+                DropdownMenuItem(value: 'priority-low', child: Text('Priority (Lowest)')),
+              ],
+              onChanged: (value) => setState(() => _sortBy = value!),
+            ),
+          );
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -654,15 +704,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(flex: 6, child: status),
                   ],
                 ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(width: 86, child: sectionLabel('PRIORITY')),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
+              const SizedBox(height: 16),
+              labeledChips(
+                label: 'PRIORITY',
+                chips: [
                   _pillChip(
                     label: 'All',
                     selected: _priorityFilter == null,
@@ -685,17 +730,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(width: 86, child: sectionLabel('CATEGORY')),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
+              const SizedBox(height: 14),
+              labeledChips(
+                label: 'CATEGORY',
+                chips: [
                   _pillChip(
                     label: 'All',
                     selected: _categoryFilter == null,
@@ -710,38 +748,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   }),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Icon(Icons.swap_vert, size: 14, color: muted),
-              const SizedBox(width: 6),
-              sectionLabel('SORT'),
-              const SizedBox(width: 12),
-              Container(
-                height: 30,
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: DropdownButton<String>(
-                  value: _sortBy,
-                  underline: const SizedBox(),
-                  isDense: true,
-                  icon: Icon(Icons.keyboard_arrow_down, size: 18, color: muted),
-                  items: const [
-                    DropdownMenuItem(value: 'date-asc', child: Text('Due Date (Soonest)')),
-                    DropdownMenuItem(value: 'date-desc', child: Text('Due Date (Latest)')),
-                    DropdownMenuItem(value: 'priority-high', child: Text('Priority (Highest)')),
-                    DropdownMenuItem(value: 'priority-low', child: Text('Priority (Lowest)')),
+              const SizedBox(height: 18),
+              if (compact)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.swap_vert, size: 14, color: muted),
+                        const SizedBox(width: 6),
+                        sectionLabel('SORT'),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(width: double.infinity, child: sortDropdown),
                   ],
-                  onChanged: (value) => setState(() => _sortBy = value!),
+                )
+              else
+                Row(
+                  children: [
+                    Icon(Icons.swap_vert, size: 14, color: muted),
+                    const SizedBox(width: 6),
+                    sectionLabel('SORT'),
+                    const SizedBox(width: 12),
+                    sortDropdown,
+                  ],
                 ),
-              ),
-            ],
-          ),
             ],
           );
         },
